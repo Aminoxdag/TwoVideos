@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تشغيل مقطعين فيديو</title>
+    <style>
+        /* General Body and Font Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            direction: rtl;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow: auto;
+        }
+
+        /* Main Container */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        /* Input Section */
+        .input-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            padding: 20px 0;
+            align-items: flex-start;
+        }
+
+        .video-input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 45%;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        /* URL Input Field */
+        input[type="text"] {
+            width: 90%;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            outline: none;
+            text-align: center;
+            transition: background 0.3s;
+        }
+
+        input[type="text"]:focus {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Custom File Upload Button */
+        .file-upload-btn {
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            transition: background 0.3s, transform 0.2s;
+            text-align: center;
+            width: 80%;
+        }
+
+        .file-upload-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        /* Hide default file input */
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-name {
+            color: #ccc;
+            font-size: 14px;
+            margin-top: 5px;
+            height: 20px; /* Reserve space */
+            text-align: center;
+            word-break: break-all;
+        }
+
+        /* Video Player Container */
+        .video-container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+        }
+
+        video {
+            width: 100%;
+            height: 40vh;
+            object-fit: contain;
+            background: #000;
+            border: none;
+            transition: transform 0.3s ease;
+        }
+
+        /* Control Buttons */
+        .buttons {
+            display: flex;
+            gap: 10px;
+            padding: 10px 0;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            background: linear-gradient(45deg, #007bff, #00d4ff);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+        }
+
+        #exitFullscreen {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            font-size: 16px;
+            background: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #exitFullscreen.visible {
+            opacity: 1;
+        }
+
+        /* Zoom Slider */
+        .zoom-slider-container {
+            display: none;
+            position: absolute;
+            width: 100px;
+            padding: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .zoom-slider-container.visible {
+            opacity: 1;
+        }
+        
+        #zoomSliderContainer1 {
+             top: 10px; right: 10px;
+        }
+
+        #zoomSliderContainer2 {
+             bottom: 10px; right: 10px;
+        }
+
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+        
+        /* Status Message */
+        .status-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            border-radius: 10px;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .status-message.visible {
+            opacity: 1;
+        }
+
+        /* Fullscreen Mode Styles */
+        .fullscreen .input-container,
+        .fullscreen .buttons {
+            display: none !important;
+        }
+
+        .fullscreen .video-container {
+            max-width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .fullscreen .video-container video {
+            height: 50%;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .input-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+            .video-input-group {
+                width: 90%;
+            }
+            video {
+                height: 35vh;
+            }
+            #exitFullscreen {
+                bottom: 10px;
+            }
+             .zoom-slider-container {
+                width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="input-container">
+            <!-- Input Group for Video 1 -->
+            <div class="video-input-group">
+                <input type="text" id="video1Url" placeholder="أدخل رابط الفيديو الأول">
+                <label for="video1File" class="file-upload-btn">أو اختر ملفًا</label>
+                <input type="file" id="video1File" accept="video/*">
+                <span class="file-name" id="fileName1"></span>
+            </div>
+            <!-- Input Group for Video 2 -->
+            <div class="video-input-group">
+                <input type="text" id="video2Url" placeholder="أدخل رابط الفيديو الثاني">
+                <label for="video2File" class="file-upload-btn">أو اختر ملفًا</label>
+                <input type="file" id="video2File" accept="video/*">
+                <span class="file-name" id="fileName2"></span>
+            </div>
+        </div>
+        
+        <div class="video-container">
+            <!-- Video 1 and its zoom control -->
+            <video id="video1" controls playsinline></video>
+            <div id="zoomSliderContainer1" class="zoom-slider-container">
+                <input type="range" id="zoomSlider1" min="1" max="3" step="0.1" value="1">
+            </div>
+            
+            <!-- Video 2 and its zoom control -->
+            <video id="video2" controls playsinline></video>
+            <div id="zoomSliderContainer2" class="zoom-slider-container">
+                 <input type="range" id="zoomSlider2" min="1" max="3" step="0.1" value="1">
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button id="playBoth">تشغيل المقطعين</button>
+            <button id="fullscreen">ملء الشاشة</button>
+        </div>
+
+        <button id="exitFullscreen">خروج من ملء الشاشة</button>
+        <div class="status-message" id="statusMessage"></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get all necessary DOM elements
+            const video1 = document.getElementById('video1');
+            const video2 = document.getElementById('video2');
+            const video1Url = document.getElementById('video1Url');
+            const video2Url = document.getElementById('video2Url');
+            const video1File = document.getElementById('video1File');
+            const video2File = document.getElementById('video2File');
+            const fileName1 = document.getElementById('fileName1');
+            const fileName2 = document.getElementById('fileName2');
+            const playBothButton = document.getElementById('playBoth');
+            const fullscreenButton = document.getElementById('fullscreen');
+            const exitFullscreenButton = document.getElementById('exitFullscreen');
+            const zoomSlider1 = document.getElementById('zoomSlider1');
+            const zoomSlider2 = document.getElementById('zoomSlider2');
+            const zoomSliderContainer1 = document.getElementById('zoomSliderContainer1');
+            const zoomSliderContainer2 = document.getElementById('zoomSliderContainer2');
+            const statusMessage = document.getElementById('statusMessage');
+            const container = document.querySelector('.container');
+
+            let lastY = null;
+            let hideControlsTimeout = null;
+
+            // --- Input Handling ---
+
+            // Handle file selection for Video 1
+            video1File.addEventListener('change', () => {
+                if (video1File.files.length > 0) {
+                    fileName1.textContent = video1File.files[0].name;
+                    video1Url.value = ''; // Clear URL input
+                }
+            });
+
+            // Handle file selection for Video 2
+            video2File.addEventListener('change', () => {
+                if (video2File.files.length > 0) {
+                    fileName2.textContent = video2File.files[0].name;
+                    video2Url.value = ''; // Clear URL input
+                }
+            });
+
+            // Handle URL input for Video 1
+            video1Url.addEventListener('input', () => {
+                if (video1Url.value.trim() !== '') {
+                    video1File.value = ''; // Clear file input
+                    fileName1.textContent = '';
+                }
+            });
+            
+            // Handle URL input for Video 2
+            video2Url.addEventListener('input', () => {
+                if (video2Url.value.trim() !== '') {
+                    video2File.value = ''; // Clear file input
+                    fileName2.textContent = '';
+                }
+            });
+
+
+            // --- Core Functionality ---
+
+            // Play/Load videos based on input
+            playBothButton.addEventListener('click', () => {
+                const file1 = video1File.files[0];
+                const url1 = video1Url.value.trim();
+                const source1 = file1 ? URL.createObjectURL(file1) : url1;
+
+                const file2 = video2File.files[0];
+                const url2 = video2Url.value.trim();
+                const source2 = file2 ? URL.createObjectURL(file2) : url2;
+
+                if (source1 && source2) {
+                     // For local files, we assume they are valid. For URLs, we check them.
+                    const promise1 = file1 ? Promise.resolve() : checkVideoUrl(url1);
+                    const promise2 = file2 ? Promise.resolve() : checkVideoUrl(url2);
+
+                    Promise.all([promise1, promise2]).then(() => {
+                        video1.src = source1;
+                        video2.src = source2;
+                        video1.play().catch(() => showStatus('خطأ في تشغيل الفيديو الأول'));
+                        video2.play().catch(() => showStatus('خطأ في تشغيل الفيديو الثاني'));
+                    }).catch((error) => {
+                        showStatus('أحد روابط URL غير صالح أو لا يمكن الوصول إليه');
+                    });
+                } else {
+                    showStatus('يرجى تحديد مصدر (ملف أو رابط) لكلا الفيديوهين');
+                }
+            });
+            
+            // Function to validate a video URL
+            function checkVideoUrl(url) {
+                return new Promise((resolve, reject) => {
+                    const video = document.createElement('video');
+                    video.preload = 'metadata';
+                    video.onloadedmetadata = () => resolve();
+                    // Network errors or CORS issues can also trigger onerror
+                    video.onerror = () => reject();
+                    video.src = url;
+                });
+            }
+
+            // --- Fullscreen Mode ---
+
+            fullscreenButton.addEventListener('click', () => {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen().catch(() => showStatus('فشل الدخول إلى وضع ملء الشاشة'));
+                }
+            });
+
+            exitFullscreenButton.addEventListener('click', () => {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+            });
+            
+            // --- UI/UX Controls in Fullscreen ---
+            
+            // Zoom controls
+            zoomSlider1.addEventListener('input', () => {
+                video1.style.transform = `scale(${zoomSlider1.value})`;
+            });
+
+            zoomSlider2.addEventListener('input', () => {
+                video2.style.transform = `scale(${zoomSlider2.value})`;
+            });
+
+            // Detect swipe/mouse move to show controls in fullscreen
+            function handleMove(event) {
+                if (!document.fullscreenElement) return;
+
+                const currentY = event.type === 'touchmove' ? event.touches[0].clientY : event.clientY;
+
+                // Show controls on any significant upward movement
+                if (lastY !== null && currentY < lastY - 5) {
+                    showFullscreenControls();
+                }
+                lastY = currentY;
+            }
+            
+            document.addEventListener('touchstart', (e) => { if(document.fullscreenElement) lastY = e.touches[0].clientY; });
+            document.addEventListener('touchmove', handleMove);
+            document.addEventListener('mousemove', handleMove);
+            document.addEventListener('mousedown', (e) => { if(document.fullscreenElement) lastY = e.clientY; });
+
+
+            function showFullscreenControls() {
+                // Make controls visible
+                exitFullscreenButton.style.display = 'block';
+                zoomSliderContainer1.style.display = 'block';
+                zoomSliderContainer2.style.display = 'block';
+
+                // Use timeout to allow CSS transition to apply
+                setTimeout(() => {
+                    exitFullscreenButton.classList.add('visible');
+                    zoomSliderContainer1.classList.add('visible');
+                    zoomSliderContainer2.classList.add('visible');
+                }, 10);
+
+                // Clear any existing timeout to hide controls
+                clearTimeout(hideControlsTimeout);
+                
+                // Set a new timeout to hide the controls after a few seconds
+                hideControlsTimeout = setTimeout(hideFullscreenControls, 4000);
+            }
+
+            function hideFullscreenControls() {
+                 exitFullscreenButton.classList.remove('visible');
+                 zoomSliderContainer1.classList.remove('visible');
+                 zoomSliderContainer2.classList.remove('visible');
+                 
+                 // Hide with display:none after transition finishes
+                 setTimeout(() => {
+                    if(!exitFullscreenButton.classList.contains('visible')){
+                        exitFullscreenButton.style.display = 'none';
+                        zoomSliderContainer1.style.display = 'none';
+                        zoomSliderContainer2.style.display = 'none';
+                    }
+                 }, 300);
+            }
+
+            // Listen for changes in fullscreen state
+            document.addEventListener('fullscreenchange', () => {
+                if (document.fullscreenElement) {
+                    container.classList.add('fullscreen');
+                } else {
+                    // Reset UI when exiting fullscreen
+                    container.classList.remove('fullscreen');
+                    hideFullscreenControls();
+                    clearTimeout(hideControlsTimeout);
+
+                    // Reset zoom
+                    video1.style.transform = 'scale(1)';
+                    video2.style.transform = 'scale(1)';
+                    zoomSlider1.value = 1;
+                    zoomSlider2.value = 1;
+                    lastY = null; 
+                }
+            });
+
+            // Utility to show status messages
+            function showStatus(message) {
+                statusMessage.textContent = message;
+                statusMessage.classList.add('visible');
+                setTimeout(() => {
+                    statusMessage.classList.remove('visible');
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
