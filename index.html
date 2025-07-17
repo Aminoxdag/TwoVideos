@@ -278,13 +278,13 @@
         
         <div class="video-container">
             <!-- Video 1 and its zoom control -->
-            <video id="video1" controls playsinline></video>
+            <video id="video1" controls playsinline loop></video>
             <div id="zoomSliderContainer1" class="zoom-slider-container">
                 <input type="range" id="zoomSlider1" min="1" max="3" step="0.1" value="1">
             </div>
             
             <!-- Video 2 and its zoom control -->
-            <video id="video2" controls playsinline></video>
+            <video id="video2" controls playsinline loop></video>
             <div id="zoomSliderContainer2" class="zoom-slider-container">
                  <input type="range" id="zoomSlider2" min="1" max="3" step="0.1" value="1">
             </div>
@@ -470,11 +470,11 @@
                  
                  // Hide with display:none after transition finishes
                  setTimeout(() => {
-                    if(!exitFullscreenButton.classList.contains('visible')){
+                   if(!exitFullscreenButton.classList.contains('visible')){
                         exitFullscreenButton.style.display = 'none';
                         zoomSliderContainer1.style.display = 'none';
                         zoomSliderContainer2.style.display = 'none';
-                    }
+                   }
                  }, 300);
             }
 
